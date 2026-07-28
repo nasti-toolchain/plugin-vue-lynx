@@ -18,7 +18,6 @@
   "include": [
     "src/**/*.ts",
     "test/**/*.ts",
-    "lightning.config.ts",
-    "tsdown.config.ts"
+    "lightning.config.ts"
   ]
 }

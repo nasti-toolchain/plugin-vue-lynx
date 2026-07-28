@@ -43,8 +43,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsdown",
-    "dev": "tsdown --watch",
+    "build": "tsdown --config-loader native",
+    "dev": "tsdown --watch --config-loader native",
     "typecheck": "tsc --noEmit",
     "test": "lightning run --root .",
     "test:example": "pnpm run build && pnpm --filter @nasti-toolchain/plugin-vue-lynx-example run typecheck && pnpm --filter @nasti-toolchain/plugin-vue-lynx-example run build",

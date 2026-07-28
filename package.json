@@ -1,0 +1,99 @@
+{
+  "name": "@nasti-toolchain/plugin-vue-lynx",
+  "version": "0.1.0",
+  "description": "Nasti environment driver for building Vue Lynx applications with Rspeedy",
+  "keywords": [
+    "nasti",
+    "lynx",
+    "vue",
+    "vue-lynx",
+    "rspeedy"
+  ],
+  "homepage": "https://github.com/nasti-toolchain/plugin-vue-lynx#readme",
+  "bugs": {
+    "url": "https://github.com/nasti-toolchain/plugin-vue-lynx/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nasti-toolchain/plugin-vue-lynx.git"
+  },
+  "author": "Zixiao Laboratories",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "lightning run --root .",
+    "test:example": "pnpm run build && pnpm --filter @nasti-toolchain/plugin-vue-lynx-example run typecheck && pnpm --filter @nasti-toolchain/plugin-vue-lynx-example run build",
+    "test:dev": "pnpm run build && node scripts/smoke-dev.mjs",
+    "test:integration": "pnpm run test:example && pnpm run test:dev",
+    "check:package": "publint && attw --pack .",
+    "check": "pnpm run typecheck && pnpm run test && pnpm run build && pnpm run check:package",
+    "prepack": "pnpm run build"
+  },
+  "peerDependencies": {
+    "@lynx-js/rspeedy": ">=0.13.5 <0.15",
+    "@nasti-toolchain/nasti": "^2.3.1",
+    "@rsbuild/plugin-vue": ">=1.2.6 <2",
+    "@rspack/core": ">=1.7 <2",
+    "vue-lynx": ">=0.5.1 <1"
+  },
+  "peerDependenciesMeta": {
+    "@lynx-js/rspeedy": {
+      "optional": true
+    },
+    "@rsbuild/plugin-vue": {
+      "optional": true
+    },
+    "@rspack/core": {
+      "optional": true
+    },
+    "vue-lynx": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@lightning-js/lightning": "2.0.0",
+    "@lynx-js/rspeedy": "0.14.5",
+    "@nasti-toolchain/nasti": "2.3.1",
+    "@types/node": "^24.0.0",
+    "@rsbuild/plugin-vue": "1.2.9",
+    "@rspack/core": "1.7.12",
+    "publint": "^0.3.22",
+    "tsdown": "^0.22.14",
+    "typescript": "5.9.3",
+    "vue-lynx": "0.5.1",
+    "vue-tsc": "^3.3.8"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "packageManager": "pnpm@11.17.0"
+}

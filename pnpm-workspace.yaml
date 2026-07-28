@@ -1,0 +1,8 @@
+packages:
+  - examples/*
+onlyBuiltDependencies:
+  - '@swc/core'
+  - core-js
+  - esbuild
+overrides:
+  '@lynx-js/css-extract-webpack-plugin': 0.7.0

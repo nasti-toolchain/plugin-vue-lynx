@@ -1,0 +1,9 @@
+node_modules
+dist
+coverage
+.nasti
+.rspeedy
+.tmp
+examples/*/dist
+*.tgz
+.DS_Store

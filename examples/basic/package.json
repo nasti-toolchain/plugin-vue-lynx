@@ -1,0 +1,23 @@
+{
+  "name": "@nasti-toolchain/plugin-vue-lynx-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nasti build",
+    "dev": "nasti dev",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@nasti-toolchain/plugin-vue-lynx": "workspace:*",
+    "vue-lynx": "0.5.1"
+  },
+  "devDependencies": {
+    "@lynx-js/rspeedy": "0.14.5",
+    "@nasti-toolchain/nasti": "2.3.1",
+    "@rsbuild/plugin-vue": "1.2.9",
+    "@rspack/core": "1.7.12",
+    "typescript": "5.9.3",
+    "vue-tsc": "3.3.8"
+  }
+}

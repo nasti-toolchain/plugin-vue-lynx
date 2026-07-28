@@ -149,7 +149,7 @@ change and close events mirror the environment-driver lifecycle.
 
 | Component | v0.1 support |
 | --- | --- |
-| Node.js | `>=20.19.0` |
+| Node.js | `>=22.14.0` |
 | Nasti | `^2.3.1` |
 | Vue Lynx | `>=0.5.1 <1` (tested with `0.5.1`) |
 | Rspeedy | `>=0.13.5 <0.15` (tested with `0.14.5`) |

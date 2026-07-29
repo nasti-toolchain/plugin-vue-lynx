@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { createRequire } from 'node:module'
 
 import type {
   EnvironmentInstance,
@@ -9,6 +10,8 @@ import type { Config as RspeedyConfig } from '@lynx-js/rspeedy'
 
 import {
   CLIENT_BRIDGE_DRIVER,
+  NASTI_BACKGROUND_ENVIRONMENT,
+  NASTI_MAIN_THREAD_ENVIRONMENT,
   PLUGIN_NAME,
   RSPEEDY_DRIVER,
 } from './constants.js'
@@ -17,6 +20,7 @@ import type {
   ResolvedVueLynxTarget,
   RspeedyConfigFactoryContext,
   RspeedyConfigInput,
+  RspeedyEntry,
   VueLynxPluginOptions,
   VueLynxTargetOptions,
 } from './types.js'
@@ -98,7 +102,12 @@ function resolveTarget(
 export function extendNastiConfig(
   config: NastiConfig,
   targets: ResolvedVueLynxTarget[],
+  backend: 'rspeedy' | 'nasti' = 'rspeedy',
 ): NastiConfig {
+  if (backend === 'nasti') {
+    return extendNativeNastiConfig(config, targets)
+  }
+
   const existingEnvironments = config.environments ?? {}
   const environments: Record<string, EnvironmentOptions> = {
     ...existingEnvironments,
@@ -136,6 +145,176 @@ export function extendNastiConfig(
     ...config,
     environments,
   }
+}
+
+function extendNativeNastiConfig(
+  config: NastiConfig,
+  targets: ResolvedVueLynxTarget[],
+): NastiConfig {
+  if (targets.length !== 1 || targets[0]?.kind !== 'lynx') {
+    throw new Error(
+      `[${PLUGIN_NAME}] the experimental Nasti backend currently supports ` +
+        'one native Lynx target and does not support the web target.',
+    )
+  }
+
+  const target = targets[0]
+  const entry = resolveNativeEntry(target.entry)
+  const environments = config.environments ?? {}
+  const intermediateRoot = path.join(target.outDir, '.nasti', entry.name)
+  const vueRuntime = resolveVueLynxRuntime(config.root)
+
+  return {
+    ...config,
+    framework: 'vue',
+    resolve: {
+      ...config.resolve,
+      alias: {
+        ...config.resolve?.alias,
+        vue: vueRuntime,
+      },
+    },
+    build: {
+      ...config.build,
+      outDir: target.outDir,
+    },
+    environments: {
+      ...environments,
+      client: {
+        ...environments.client,
+        buildEnabled: false,
+      },
+      [NASTI_BACKGROUND_ENVIRONMENT]: createNativeEnvironment(
+        environments[NASTI_BACKGROUND_ENVIRONMENT],
+        entry.import,
+        path.join(intermediateRoot, 'background'),
+        'background.js',
+        NASTI_BACKGROUND_ENVIRONMENT,
+        vueRuntime,
+      ),
+      [NASTI_MAIN_THREAD_ENVIRONMENT]: createNativeEnvironment(
+        environments[NASTI_MAIN_THREAD_ENVIRONMENT],
+        entry.import,
+        path.join(intermediateRoot, 'main-thread'),
+        'main-thread.js',
+        NASTI_MAIN_THREAD_ENVIRONMENT,
+        vueRuntime,
+      ),
+    },
+  }
+}
+
+function createNativeEnvironment(
+  existing: EnvironmentOptions | undefined,
+  entry: string,
+  outDir: string,
+  fileName: string,
+  condition: string,
+  vueRuntime: string,
+): EnvironmentOptions {
+  if (existing?.driver) {
+    throw new Error(
+      `[${PLUGIN_NAME}] native environment "${condition}" already uses ` +
+        `driver "${existing.driver}"; the Nasti backend requires Rolldown.`,
+    )
+  }
+  const existingOutput = existing?.build?.rolldownOptions?.output
+  return {
+    ...existing,
+    consumer: 'client',
+    entry,
+    resolve: {
+      ...existing?.resolve,
+      conditions: [
+        condition,
+        ...(existing?.resolve?.conditions ?? ['browser', 'import']),
+      ],
+      alias: {
+        ...existing?.resolve?.alias,
+        vue: vueRuntime,
+      },
+    },
+    build: {
+      ...existing?.build,
+      outDir,
+      target: 'es2019',
+      rolldownOptions: {
+        ...existing?.build?.rolldownOptions,
+        transform: {
+          ...existing?.build?.rolldownOptions?.transform,
+          target: 'es2019',
+        },
+        output: {
+          ...existingOutput,
+          format: 'iife',
+          name:
+            condition === NASTI_BACKGROUND_ENVIRONMENT
+              ? 'VueLynxBackground'
+              : 'VueLynxMainThread',
+          entryFileNames: fileName,
+          chunkFileNames: `${condition}-[name].[hash].js`,
+        },
+      },
+    },
+  }
+}
+
+function resolveVueLynxRuntime(root: string | undefined): string {
+  const absoluteRoot = path.resolve(root ?? process.cwd())
+  try {
+    return createRequire(path.join(absoluteRoot, 'package.json')).resolve(
+      'vue-lynx',
+    )
+  } catch (error) {
+    throw new Error(
+      `[${PLUGIN_NAME}] the experimental Nasti backend requires "vue-lynx" ` +
+        `to be resolvable from "${absoluteRoot}".`,
+      { cause: error },
+    )
+  }
+}
+
+export interface NativeEntry {
+  name: string
+  import: string
+}
+
+export function resolveNativeEntry(entry: RspeedyEntry): NativeEntry {
+  if (typeof entry === 'string') {
+    return { name: path.parse(entry).name, import: entry }
+  }
+  if (Array.isArray(entry)) {
+    if (entry.length === 1 && entry[0]) {
+      return { name: path.parse(entry[0]).name, import: entry[0] }
+    }
+    throw new Error(
+      `[${PLUGIN_NAME}] the experimental Nasti backend currently requires ` +
+        'exactly one entry import.',
+    )
+  }
+
+  const entries = Object.entries(entry)
+  if (entries.length !== 1 || !entries[0]) {
+    throw new Error(
+      `[${PLUGIN_NAME}] the experimental Nasti backend currently supports ` +
+        'exactly one named entry.',
+    )
+  }
+  const [name, value] = entries[0]
+  const imports =
+    typeof value === 'string'
+      ? [value]
+      : Array.isArray(value)
+        ? value
+        : typeof value.import === 'string'
+          ? [value.import]
+          : value.import
+  if (imports?.length !== 1 || !imports[0]) {
+    throw new Error(
+      `[${PLUGIN_NAME}] native entry "${name}" must contain exactly one import.`,
+    )
+  }
+  return { name, import: imports[0] }
 }
 
 function toNastiEntry(

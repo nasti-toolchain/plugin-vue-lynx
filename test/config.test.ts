@@ -11,9 +11,11 @@ import type { Config as RspeedyConfig } from '@lynx-js/rspeedy'
 import {
   createRspeedyConfig,
   extendNastiConfig,
+  resolveNativeEntry,
   resolveTargets,
 } from '../src/config.js'
 import type { RspeedyRuntime } from '../src/dependencies.js'
+import { pluginVueLynx } from '../src/index.js'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -137,5 +139,83 @@ describe('Vue Lynx target configuration', () => {
         port: 4321,
       },
     } satisfies RspeedyConfig)
+  })
+
+  test('configures background and main-thread Nasti environments', () => {
+    const targets = resolveTargets({
+      backend: 'nasti',
+      entry: {
+        main: './src/index.ts',
+      },
+    })
+    const config = extendNastiConfig({ root }, targets, 'nasti')
+
+    expect(config.framework).toBe('vue')
+    expect(config.environments?.client?.buildEnabled).toBe(false)
+    expect(config.environments?.['lynx-background']).toMatchObject({
+      consumer: 'client',
+      entry: './src/index.ts',
+      build: {
+        outDir: 'dist/lynx/.nasti/main/background',
+        target: 'es2019',
+        rolldownOptions: {
+          transform: {
+            target: 'es2019',
+          },
+          output: {
+            format: 'iife',
+            entryFileNames: 'background.js',
+          },
+        },
+      },
+    })
+    expect(config.environments?.['lynx-main-thread']).toMatchObject({
+      consumer: 'client',
+      entry: './src/index.ts',
+      build: {
+        rolldownOptions: {
+          output: {
+            entryFileNames: 'main-thread.js',
+          },
+        },
+      },
+    })
+  })
+
+  test('requires one native entry import', () => {
+    expect(resolveNativeEntry({ main: './src/index.ts' })).toEqual({
+      name: 'main',
+      import: './src/index.ts',
+    })
+    expect(() =>
+      resolveNativeEntry(['./src/polyfill.ts', './src/index.ts']),
+    ).toThrow('exactly one entry import')
+  })
+
+  test('rejects web and external drivers on the native backend', () => {
+    expect(() =>
+      pluginVueLynx({
+        backend: 'nasti',
+        web: true,
+      }),
+    ).toThrow('does not support the web target')
+
+    const targets = resolveTargets({
+      backend: 'nasti',
+    })
+    expect(() =>
+      extendNastiConfig(
+        {
+          root,
+          environments: {
+            'lynx-background': {
+              driver: 'custom',
+            },
+          },
+        },
+        targets,
+        'nasti',
+      ),
+    ).toThrow('requires Rolldown')
   })
 })

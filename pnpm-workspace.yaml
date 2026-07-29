@@ -4,5 +4,7 @@ allowBuilds:
   '@swc/core': true
   core-js: true
   esbuild: true
+minimumReleaseAgeExclude:
+  - '@nasti-toolchain/nasti@2.4.0'
 overrides:
   '@lynx-js/css-extract-webpack-plugin': 0.7.0

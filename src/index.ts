@@ -21,6 +21,7 @@ import {
   createPluginApiController,
   VUE_LYNX_PLUGIN_API_KEY,
 } from './plugin-api.js'
+import { createNastiNativePlugin } from './native.js'
 import type {
   VueLynxPluginApi,
   VueLynxPluginOptions,
@@ -46,6 +47,7 @@ export type {
   VueLynxQrCodeMetadata,
   VueLynxServeMetadata,
   VueLynxTargetOptions,
+  VueLynxBackend,
 } from './types.js'
 
 /**
@@ -59,6 +61,19 @@ export function pluginVueLynx(
     targets.map((target) => [target.name, target]),
   )
   const apiController = createPluginApiController(options.bridge)
+
+  if (options.backend === 'nasti') {
+    if (targets.length !== 1) {
+      throw new Error(
+        `[${PLUGIN_NAME}] the experimental Nasti backend currently supports ` +
+          'one native Lynx target and does not support the web target.',
+      )
+    }
+    return createNastiNativePlugin({
+      target: targets[0]!,
+      apiController,
+    })
+  }
 
   return {
     name: PLUGIN_NAME,

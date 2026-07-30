@@ -12,6 +12,8 @@ import type { PluginVueLynxOptions } from 'vue-lynx/plugin'
 
 export type { PluginVueLynxOptions, RspeedyConfig, RspeedyEntry }
 
+export type VueLynxBackend = 'rspeedy' | 'nasti'
+
 export interface RspeedyConfigFactoryContext {
   command: 'build' | 'serve'
   environment: EnvironmentInstance
@@ -49,6 +51,16 @@ export interface VueLynxTargetOptions {
 }
 
 export interface VueLynxPluginOptions {
+  /**
+   * Build backend.
+   *
+   * `nasti` is an experimental production-only backend that builds the
+   * background and main-thread graphs with Nasti/Rolldown and encodes the
+   * final native bundle with TASM.
+   *
+   * @defaultValue `rspeedy`
+   */
+  backend?: VueLynxBackend
   /** Convenience entry configuration for the native Lynx target. */
   entry?: RspeedyEntry
   /** Convenience output directory for the native Lynx target. */

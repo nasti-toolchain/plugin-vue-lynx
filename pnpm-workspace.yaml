@@ -4,5 +4,14 @@ allowBuilds:
   '@swc/core': true
   core-js: true
   esbuild: true
+minimumReleaseAgeExclude:
+  - '@nasti-toolchain/nasti@2.4.0'
+peerDependencyRules:
+  allowedVersions:
+    # Optional WASI fallbacks are resolved through both the Rspeedy (emnapi 1)
+    # and Nasti 2.4 (emnapi 2 alpha) toolchains. Native platform bindings are
+    # used in CI and production; keep pnpm's all-platform peer audit explicit.
+    '@napi-rs/wasm-runtime@1.2.0>@emnapi/core': ^1.9.1 || ^2.0.0-alpha.3
+    '@napi-rs/wasm-runtime@1.2.0>@emnapi/runtime': ^1.9.1 || ^2.0.0-alpha.3
 overrides:
   '@lynx-js/css-extract-webpack-plugin': 0.7.0

@@ -1,7 +1,8 @@
 # @nasti-toolchain/plugin-vue-lynx
 
-Nasti environment driver for building [Vue Lynx](https://vue.lynxjs.org/)
-applications with [Rspeedy](https://lynxjs.org/rspeedy/).
+Build [Vue Lynx](https://vue.lynxjs.org/) applications through Nasti. Rspeedy
+remains the default backend; an experimental production backend now builds the
+native graphs directly with Nasti/Rolldown.
 
 Version 0.1 provides:
 
@@ -21,12 +22,21 @@ tooling range explicitly:
 
 ```sh
 pnpm add -D \
-  @nasti-toolchain/nasti@^2.3.1 \
+  @nasti-toolchain/nasti@^2.4.0 \
   @nasti-toolchain/plugin-vue-lynx@^0.1.0 \
   @lynx-js/rspeedy@^0.14.5 \
   @rsbuild/plugin-vue@^1.2.6 \
   @rspack/core@^1.7.0 \
   vue-lynx@^0.5.1
+```
+
+The experimental native backend additionally requires:
+
+```sh
+pnpm add -D \
+  @lynx-js/css-serializer@^0.1.5 \
+  @lynx-js/react@^0.116.5 \
+  @lynx-js/tasm@^0.0.26
 ```
 
 `vue-lynx@0.5.1` currently allows
@@ -98,6 +108,31 @@ pluginVueLynx({
 
 See the complete runnable project in [`examples/basic`](./examples/basic).
 
+## Experimental native Nasti backend
+
+Nasti 2.4's environment build metadata and app-level finalizer make the first
+Rspack-free production milestone possible:
+
+```ts
+pluginVueLynx({
+  backend: 'nasti',
+  entry: {
+    main: './src/index.ts',
+  },
+})
+```
+
+This creates independent `lynx-background` and `lynx-main-thread` Rolldown
+graphs, applies the Vue Lynx worklet transforms, serializes CSS, and uses TASM
+to emit `dist/lynx/main.lynx.bundle`.
+
+The backend is opt-in and production-only. It currently supports one native
+entry with unscoped CSS. Development/HMR, web output, scoped CSS and CSS
+preprocessors, async/lazy chunks, IFR, asset routing, and source/debug metadata
+remain on the Rspeedy backend.
+The remaining Nasti platform work is tracked in
+[`zixiao-labs/Nasti#36`](https://github.com/zixiao-labs/Nasti/issues/36).
+
 ## TypeScript and Volar
 
 ```json
@@ -150,7 +185,7 @@ change and close events mirror the environment-driver lifecycle.
 | Component | v0.1 support |
 | --- | --- |
 | Node.js | `>=22.14.0` |
-| Nasti | `^2.3.1` |
+| Nasti | `^2.4.0` |
 | Vue Lynx | `>=0.5.1 <1` (tested with `0.5.1`) |
 | Rspeedy | `>=0.13.5 <0.15` (tested with `0.14.5`) |
 | Rsbuild plugin Vue | `>=1.2.6 <2` |

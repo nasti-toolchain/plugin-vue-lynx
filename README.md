@@ -5,7 +5,7 @@ default backend builds native Lynx graphs with Nasti/Rolldown and encodes a
 `.lynx.bundle`. Pass `backend: 'rspeedy'` for the optional Rspack-backed driver
 when you need web output or other Rspeedy-only features.
 
-Version 0.1 provides:
+Version 1.0 provides:
 
 - a default native `lynx` pipeline with background and main-thread Rolldown
   graphs;
@@ -24,7 +24,7 @@ Native backend (default — no Rspack / Rspeedy required):
 ```sh
 pnpm add -D \
   @nasti-toolchain/nasti@^2.4.1 \
-  @nasti-toolchain/plugin-vue-lynx@^0.1.0 \
+  @nasti-toolchain/plugin-vue-lynx@^1.0.0 \
   vue-lynx@^0.5.1 \
   @lynx-js/css-serializer@^0.1.5 \
   @lynx-js/react@^0.116.5 \
@@ -174,7 +174,7 @@ change and close events mirror the environment-driver lifecycle.
 
 ## Compatibility
 
-| Component | v0.1 support |
+| Component | v1.0 support |
 | --- | --- |
 | Node.js | `>=22.14.0` |
 | Nasti | `^2.4.1` |

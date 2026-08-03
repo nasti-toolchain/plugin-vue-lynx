@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Keep native dev middleware on the latest rebuild by flushing pending
+  rebuilds before serving `.lynx.bundle`, rebuild in development mode, and
+  emit change events from the native serve driver.
 - Drop Rspeedy/Rspack from the example app dependencies now that the native
   backend is default; keep them as optional peers for `backend: 'rspeedy'`.
 - Disable the placeholder `client` environment with `buildEnabled: false`

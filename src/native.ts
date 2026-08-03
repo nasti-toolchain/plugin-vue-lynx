@@ -61,6 +61,9 @@ export function createNastiNativePlugin({
   let absoluteEntry = ''
   let rebuildTimer: ReturnType<typeof setTimeout> | undefined
   let rebuildChain: Promise<void> = Promise.resolve()
+  let pendingRebuild:
+    | { reason: string; server?: DevServer | undefined }
+    | undefined
   let latestBundle: Uint8Array | undefined
   let closed = false
 
@@ -80,39 +83,66 @@ export function createNastiNativePlugin({
       `[${PLUGIN_NAME}] rebuilding native bundle (${reason})…`,
     )
     const { build } = await import('@nasti-toolchain/nasti')
+    // Dev rebuilds must keep development `import.meta.env` semantics even
+    // though the programmatic API always runs as command: "build".
     await build({
       root: resolvedConfig.root,
       logLevel: 'warn',
+      mode: 'development',
     })
     const source = await readFile(bundlePath())
     latestBundle = source
     return source
   }
 
+  const enqueueRebuild = (reason: string, server?: DevServer) => {
+    rebuildChain = rebuildChain
+      .then(async () => {
+        if (closed) return
+        await rebuildBundle(reason)
+        server?.ws.send({
+          type: 'custom',
+          event: 'vue-lynx:native-bundle',
+          data: { fileName: bundleFileName },
+          environment: target.name,
+        })
+      })
+      .catch((error) => {
+        const normalized =
+          error instanceof Error ? error : new Error(String(error))
+        resolvedConfig?.logger.error(
+          `[${PLUGIN_NAME}] native rebuild failed: ${normalized.message}`,
+          { error: normalized },
+        )
+      })
+    return rebuildChain
+  }
+
   const scheduleRebuild = (reason: string, server?: DevServer) => {
     if (closed) return
+    pendingRebuild = { reason, server }
     clearTimeout(rebuildTimer)
     rebuildTimer = setTimeout(() => {
-      rebuildChain = rebuildChain
-        .then(async () => {
-          if (closed) return
-          await rebuildBundle(reason)
-          server?.ws.send({
-            type: 'custom',
-            event: 'vue-lynx:native-bundle',
-            data: { fileName: bundleFileName },
-            environment: target.name,
-          })
-        })
-        .catch((error) => {
-          const normalized =
-            error instanceof Error ? error : new Error(String(error))
-          resolvedConfig?.logger.error(
-            `[${PLUGIN_NAME}] native rebuild failed: ${normalized.message}`,
-            { error: normalized },
-          )
-        })
+      rebuildTimer = undefined
+      const pending = pendingRebuild
+      pendingRebuild = undefined
+      if (!pending || closed) return
+      void enqueueRebuild(pending.reason, pending.server)
     }, REBUILD_DEBOUNCE_MS)
+  }
+
+  const getFreshBundle = async (): Promise<Uint8Array> => {
+    if (rebuildTimer && pendingRebuild) {
+      clearTimeout(rebuildTimer)
+      rebuildTimer = undefined
+      const pending = pendingRebuild
+      pendingRebuild = undefined
+      await enqueueRebuild(pending.reason, pending.server)
+    } else {
+      await rebuildChain
+    }
+    if (latestBundle) return latestBundle
+    return rebuildBundle('dev-server start')
   }
 
   return {
@@ -142,14 +172,12 @@ export function createNastiNativePlugin({
         target,
         bundleFileName,
         apiController,
-        getBundle: async () => {
-          if (latestBundle) return latestBundle
-          return rebuildBundle('dev-server start')
-        },
+        getBundle: getFreshBundle,
         scheduleRebuild: (reason, server) => scheduleRebuild(reason, server),
         markClosed: () => {
           closed = true
           clearTimeout(rebuildTimer)
+          pendingRebuild = undefined
         },
       })
     },
@@ -360,8 +388,9 @@ function createNativeServeDriver({
       return result
     },
 
-    watchChange(file, event) {
+    async watchChange(file, event) {
       if (!server) return
+      await apiController.notifyChange(environment.name, file, event)
       scheduleRebuild(`${event} ${file}`, server)
     },
 

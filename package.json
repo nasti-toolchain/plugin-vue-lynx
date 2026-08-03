@@ -95,7 +95,7 @@
     "@lynx-js/react": "0.116.5",
     "@lynx-js/rspeedy": "0.14.5",
     "@lynx-js/tasm": "0.0.26",
-    "@nasti-toolchain/nasti": "2.4.0",
+    "@nasti-toolchain/nasti": "2.4.2",
     "@rsbuild/plugin-vue": "1.2.9",
     "@rspack/core": "1.7.12",
     "@types/node": "^24.13.3",

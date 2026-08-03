@@ -34,7 +34,11 @@ describe('Vue Lynx target configuration', () => {
     })
     const config = extendNastiConfig({ root }, targets)
 
-    expect(config.environments?.client?.buildEnabled).toBe(false)
+    expect(config.environments?.client).toMatchObject({
+      consumer: 'client',
+      buildEnabled: false,
+    })
+    expect(config.environments?.client?.driver).toBeUndefined()
     expect(config.environments?.lynx).toMatchObject({
       consumer: 'client',
       driver: 'rspeedy',

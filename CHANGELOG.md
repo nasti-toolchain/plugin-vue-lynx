@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Drop Rspeedy/Rspack from the example app dependencies now that the native
+  backend is default; keep them as optional peers for `backend: 'rspeedy'`.
 - Disable the placeholder `client` environment with `buildEnabled: false`
   instead of a no-op driver, avoiding a Nasti 2.4.2 transformMiddleware crash
   when every real target uses an external driver.

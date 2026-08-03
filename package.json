@@ -1,6 +1,6 @@
 {
   "name": "@nasti-toolchain/plugin-vue-lynx",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Build Vue Lynx applications with Nasti's native Rolldown backend or the optional Rspeedy driver",
   "keywords": [
     "nasti",

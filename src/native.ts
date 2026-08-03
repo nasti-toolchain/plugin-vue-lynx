@@ -109,13 +109,12 @@ export function createNastiNativePlugin({
       if (isStyleRequest(id)) {
         if (environment === NASTI_BACKGROUND_ENVIRONMENT) {
           const css = extractNastiCss(code)
-          if (css === undefined) {
-            throw new Error(
-              `[${PLUGIN_NAME}] could not collect CSS from "${id}". ` +
-                'The experimental backend only supports Nasti CSS modules.',
-            )
+          // Nasti 2.4.2+ no longer emits injectable CSS modules for Vue SFC
+          // styles. Keep the legacy extractor for older payloads; follow-up
+          // commits collect CSS through BuildAppContext.getCss instead.
+          if (css !== undefined) {
+            styles.set(id, css)
           }
-          styles.set(id, css)
         }
         return {
           code: '',

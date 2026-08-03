@@ -60,7 +60,7 @@
     "@lynx-js/react": ">=0.116.5 <0.117",
     "@lynx-js/rspeedy": ">=0.13.5 <0.15",
     "@lynx-js/tasm": ">=0.0.26 <0.1",
-    "@nasti-toolchain/nasti": "^2.4.0",
+    "@nasti-toolchain/nasti": "^2.4.1",
     "@rsbuild/plugin-vue": ">=1.2.6 <2",
     "@rspack/core": ">=1.7 <2",
     "vue-lynx": ">=0.5.1 <1"

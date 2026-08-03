@@ -47,7 +47,6 @@ export function createNastiNativePlugin({
   apiController,
 }: NastiNativePluginOptions): NastiPlugin {
   const entry = resolveNativeEntry(target.entry)
-  const styles = new Map<string, string>()
   let resolvedConfig: ResolvedConfig | undefined
   let absoluteEntry = ''
 
@@ -68,7 +67,6 @@ export function createNastiNativePlugin({
     configResolved(config) {
       resolvedConfig = config
       absoluteEntry = path.resolve(config.root, entry.import)
-      styles.clear()
     },
 
     setup(api: PluginApi) {
@@ -106,20 +104,10 @@ export function createNastiNativePlugin({
         return
       }
 
+      // CSS is collected through Nasti's EnvironmentCssMetadata (`getCss`);
+      // browser injection/emission is already disabled in the native config.
       if (isStyleRequest(id)) {
-        if (environment === NASTI_BACKGROUND_ENVIRONMENT) {
-          const css = extractNastiCss(code)
-          // Nasti 2.4.2+ no longer emits injectable CSS modules for Vue SFC
-          // styles. Keep the legacy extractor for older payloads; follow-up
-          // commits collect CSS through BuildAppContext.getCss instead.
-          if (css !== undefined) {
-            styles.set(id, css)
-          }
-        }
-        return {
-          code: '',
-          moduleSideEffects: 'no-treeshake',
-        }
+        return
       }
 
       const isEntry = cleanId(id) === absoluteEntry
@@ -154,20 +142,20 @@ export function createNastiNativePlugin({
       if (!resolvedConfig) {
         throw new Error(`[${PLUGIN_NAME}] native build was not configured.`)
       }
-      const background = requireCodeArtifact(
+      const background = requireEntryCode(
         context,
         NASTI_BACKGROUND_ENVIRONMENT,
-        BACKGROUND_FILE,
+        entry.name,
       )
-      const mainThread = requireCodeArtifact(
+      const mainThread = requireEntryCode(
         context,
         NASTI_MAIN_THREAD_ENVIRONMENT,
-        MAIN_THREAD_FILE,
+        entry.name,
       )
       const source = await encodeNativeBundle({
         backgroundCode: background,
         mainThreadCode: mainThread,
-        styles: [...styles.values()],
+        styles: collectCssSources(context, NASTI_BACKGROUND_ENVIRONMENT),
       })
       const fileName = `${entry.name}.lynx.bundle`
       context.emitFile({
@@ -199,15 +187,33 @@ export function createNastiNativePlugin({
   }
 }
 
-function requireCodeArtifact(
+function collectCssSources(
   context: BuildAppContext,
   environment: string,
-  fileName: string,
+): string[] {
+  const css = context.getCss(environment)
+  if (!css) return []
+  return Object.values(css.modules)
+    .map((module) => module.code || module.source)
+    .filter((value) => value.length > 0)
+}
+
+function requireEntryCode(
+  context: BuildAppContext,
+  environment: string,
+  entryName: string,
 ): string {
-  const artifact = context.getArtifact(environment, fileName)
+  const artifact =
+    context.getEntry(environment, entryName) ??
+    context.getArtifact(
+      environment,
+      environment === NASTI_BACKGROUND_ENVIRONMENT
+        ? BACKGROUND_FILE
+        : MAIN_THREAD_FILE,
+    )
   if (!artifact) {
     throw new Error(
-      `[${PLUGIN_NAME}] missing ${environment} artifact "${fileName}".`,
+      `[${PLUGIN_NAME}] missing ${environment} entry "${entryName}".`,
     )
   }
   return artifactCode(artifact, environment)
@@ -233,16 +239,6 @@ function isStyleRequest(id: string): boolean {
     /\.(?:css|less|sass|scss|styl|stylus)$/.test(file ?? '') ||
     /(?:^|&)type=style(?:&|$)/.test(query)
   )
-}
-
-function extractNastiCss(code: string): string | undefined {
-  const match = /\bconst css = ("(?:\\.|[^"\\])*");/.exec(code)
-  if (!match?.[1]) return undefined
-  try {
-    return JSON.parse(match[1]) as string
-  } catch {
-    return undefined
-  }
 }
 
 function cleanId(id: string): string {

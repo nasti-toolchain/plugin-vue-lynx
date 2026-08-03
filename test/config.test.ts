@@ -156,10 +156,11 @@ describe('Vue Lynx target configuration', () => {
       build: {
         outDir: 'dist/lynx/.nasti/main/background',
         target: 'es2019',
+        css: {
+          inject: false,
+          emit: false,
+        },
         rolldownOptions: {
-          transform: {
-            target: 'es2019',
-          },
           output: {
             format: 'iife',
             entryFileNames: 'background.js',
@@ -167,10 +168,19 @@ describe('Vue Lynx target configuration', () => {
         },
       },
     })
+    expect(
+      config.environments?.['lynx-background']?.build?.rolldownOptions
+        ?.transform?.target,
+    ).toBeUndefined()
     expect(config.environments?.['lynx-main-thread']).toMatchObject({
       consumer: 'client',
       entry: './src/index.ts',
       build: {
+        target: 'es2019',
+        css: {
+          inject: false,
+          emit: false,
+        },
         rolldownOptions: {
           output: {
             entryFileNames: 'main-thread.js',

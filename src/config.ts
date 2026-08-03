@@ -239,13 +239,18 @@ function createNativeEnvironment(
     build: {
       ...existing?.build,
       outDir,
+      // Lynx main-thread / background need the ES2019 baseline; Nasti 2.4.1+
+      // applies `build.target` to OXC and Rolldown without a low-level workaround.
       target: 'es2019',
+      css: {
+        ...existing?.build?.css,
+        // Keep the CSS module graph for TASM encoding, but skip browser
+        // injection and hashed .css emission.
+        inject: false,
+        emit: false,
+      },
       rolldownOptions: {
         ...existing?.build?.rolldownOptions,
-        transform: {
-          ...existing?.build?.rolldownOptions?.transform,
-          target: 'es2019',
-        },
         output: {
           ...existingOutput,
           format: 'iife',

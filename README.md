@@ -22,7 +22,7 @@ tooling range explicitly:
 
 ```sh
 pnpm add -D \
-  @nasti-toolchain/nasti@^2.4.0 \
+  @nasti-toolchain/nasti@^2.4.1 \
   @nasti-toolchain/plugin-vue-lynx@^0.1.0 \
   @lynx-js/rspeedy@^0.14.5 \
   @rsbuild/plugin-vue@^1.2.6 \
@@ -110,8 +110,8 @@ See the complete runnable project in [`examples/basic`](./examples/basic).
 
 ## Experimental native Nasti backend
 
-Nasti 2.4's environment build metadata and app-level finalizer make the first
-Rspack-free production milestone possible:
+Nasti 2.4.1+'s Environment API (CSS metadata, multi-environment transforms,
+and `build.target`) makes the first Rspack-free production milestone possible:
 
 ```ts
 pluginVueLynx({
@@ -128,10 +128,10 @@ to emit `dist/lynx/main.lynx.bundle`.
 
 The backend is opt-in and production-only. It currently supports one native
 entry with unscoped CSS. Development/HMR, web output, scoped CSS and CSS
-preprocessors, async/lazy chunks, IFR, asset routing, and source/debug metadata
-remain on the Rspeedy backend.
-The remaining Nasti platform work is tracked in
-[`zixiao-labs/Nasti#36`](https://github.com/zixiao-labs/Nasti/issues/36).
+preprocessors, async/lazy chunks, IFR, and asset routing remain on the Rspeedy
+backend until later stack layers land.
+Nasti [#36](https://github.com/zixiao-labs/Nasti/issues/36) Environment API
+gaps are closed in 2.4.1+; this plugin is migrating onto those APIs.
 
 ## TypeScript and Volar
 
@@ -185,7 +185,7 @@ change and close events mirror the environment-driver lifecycle.
 | Component | v0.1 support |
 | --- | --- |
 | Node.js | `>=22.14.0` |
-| Nasti | `^2.4.0` |
+| Nasti | `^2.4.1` |
 | Vue Lynx | `>=0.5.1 <1` (tested with `0.5.1`) |
 | Rspeedy | `>=0.13.5 <0.15` (tested with `0.14.5`) |
 | Rsbuild plugin Vue | `>=1.2.6 <2` |

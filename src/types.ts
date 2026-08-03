@@ -54,11 +54,14 @@ export interface VueLynxPluginOptions {
   /**
    * Build backend.
    *
-   * `nasti` builds the background and main-thread graphs with Nasti/Rolldown,
-   * encodes a native `.lynx.bundle` with TASM, and rebuilds that bundle during
-   * `nasti dev` through a serve-only environment driver.
+   * `nasti` (default) builds the background and main-thread graphs with
+   * Nasti/Rolldown, encodes a native `.lynx.bundle` with TASM, and rebuilds
+   * that bundle during `nasti dev`.
    *
-   * @defaultValue `rspeedy`
+   * `rspeedy` keeps the Rspack-backed driver for web output and other
+   * Rspeedy-only capabilities.
+   *
+   * @defaultValue `nasti`
    */
   backend?: VueLynxBackend
   /** Convenience entry configuration for the native Lynx target. */

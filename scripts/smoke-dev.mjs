@@ -11,6 +11,10 @@ const repositoryRoot = path.resolve(
 )
 const exampleRoot = path.join(repositoryRoot, 'examples/basic')
 const port = await findAvailablePort()
+
+// Example defaults to the native backend; force Rspeedy for this smoke path.
+process.env['VUE_LYNX_RSPEEDY_BACKEND'] = '1'
+
 let server
 
 try {

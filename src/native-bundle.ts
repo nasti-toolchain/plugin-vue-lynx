@@ -63,7 +63,7 @@ export async function encodeNativeBundle({
     ])
   } catch (error) {
     throw new Error(
-      `[${PLUGIN_NAME}] the experimental Nasti backend requires ` +
+      `[${PLUGIN_NAME}] the Nasti backend requires ` +
         '"@lynx-js/css-serializer" and "@lynx-js/tasm". Install the native ' +
         'backend peers before building.',
       { cause: error },

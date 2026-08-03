@@ -190,7 +190,7 @@ function cleanId(id: string): string {
 function missingNativeDependency(packageName: string, cause: unknown): Error {
   return new Error(
     `[${PLUGIN_NAME}] the experimental Nasti backend requires ` +
-      `"${packageName}". Install the native backend peers before building.`,
+      `"${packageName}". Install the Nasti backend peers before building.`,
     { cause },
   )
 }

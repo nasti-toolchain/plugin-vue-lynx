@@ -208,6 +208,12 @@ describe('Vue Lynx target configuration', () => {
   test('rejects web and external drivers on the native backend', () => {
     expect(() =>
       pluginVueLynx({
+        web: true,
+      }),
+    ).toThrow('does not support the web target')
+
+    expect(() =>
+      pluginVueLynx({
         backend: 'nasti',
         web: true,
       }),

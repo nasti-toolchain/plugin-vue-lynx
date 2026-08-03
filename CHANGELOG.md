@@ -5,6 +5,8 @@
 - Disable the placeholder `client` environment with `buildEnabled: false`
   instead of a no-op driver, avoiding a Nasti 2.4.2 transformMiddleware crash
   when every real target uses an external driver.
+- Make `backend: 'nasti'` the default; keep Rspeedy available through
+  `backend: 'rspeedy'` for web output and Rspeedy-only features.
 - Teach the native backend to serve and rebuild `.lynx.bundle` during
   `nasti dev` through a serve-only environment driver and
   `handleHotUpdateApp` coordination.
@@ -14,12 +16,10 @@
 - Collect native CSS through `BuildAppContext.getCss` with
   `build.css.inject/emit: false` instead of parsing browser `<style>` injection
   modules.
-- Add an opt-in `backend: 'nasti'` milestone that builds Vue Lynx background
-  and main-thread graphs with Rolldown and encodes a native `.lynx.bundle`
-  with TASM.
+- Add the native Nasti/Rolldown backend that builds Vue Lynx background and
+  main-thread graphs and encodes a `.lynx.bundle` with TASM.
 - Add worklet, CSS serialization, configuration, and decoded-bundle coverage
-  for the experimental native backend.
-- Keep Rspeedy as the default backend while migrating off Rspack.
+  for the native backend.
 
 ## 0.1.0
 

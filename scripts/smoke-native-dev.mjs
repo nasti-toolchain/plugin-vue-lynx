@@ -10,8 +10,6 @@ const repositoryRoot = path.resolve(
 const exampleRoot = path.join(repositoryRoot, 'examples/basic')
 const port = await findAvailablePort()
 
-process.env['VUE_LYNX_NATIVE_BACKEND'] = '1'
-
 const { createServer: createNastiServer } = await import(
   '@nasti-toolchain/nasti'
 )

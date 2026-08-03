@@ -156,7 +156,7 @@ function extendNativeNastiConfig(
 ): NastiConfig {
   if (targets.length !== 1 || targets[0]?.kind !== 'lynx') {
     throw new Error(
-      `[${PLUGIN_NAME}] the experimental Nasti backend currently supports ` +
+      `[${PLUGIN_NAME}] the Nasti backend currently supports ` +
         'one native Lynx target and does not support the web target.',
     )
   }
@@ -293,7 +293,7 @@ function resolveVueLynxRuntime(root: string | undefined): string {
     )
   } catch (error) {
     throw new Error(
-      `[${PLUGIN_NAME}] the experimental Nasti backend requires "vue-lynx" ` +
+      `[${PLUGIN_NAME}] the Nasti backend requires "vue-lynx" ` +
         `to be resolvable from "${absoluteRoot}".`,
       { cause: error },
     )
@@ -314,7 +314,7 @@ export function resolveNativeEntry(entry: RspeedyEntry): NativeEntry {
       return { name: path.parse(entry[0]).name, import: entry[0] }
     }
     throw new Error(
-      `[${PLUGIN_NAME}] the experimental Nasti backend currently requires ` +
+      `[${PLUGIN_NAME}] the Nasti backend currently requires ` +
         'exactly one entry import.',
     )
   }
@@ -322,7 +322,7 @@ export function resolveNativeEntry(entry: RspeedyEntry): NativeEntry {
   const entries = Object.entries(entry)
   if (entries.length !== 1 || !entries[0]) {
     throw new Error(
-      `[${PLUGIN_NAME}] the experimental Nasti backend currently supports ` +
+      `[${PLUGIN_NAME}] the Nasti backend currently supports ` +
         'exactly one named entry.',
     )
   }

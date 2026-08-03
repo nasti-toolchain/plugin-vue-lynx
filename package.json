@@ -50,7 +50,8 @@
     "test:example": "pnpm run build && pnpm --filter @nasti-toolchain/plugin-vue-lynx-example run typecheck && pnpm --filter @nasti-toolchain/plugin-vue-lynx-example run build",
     "test:native": "pnpm run build && VUE_LYNX_NATIVE_BACKEND=1 pnpm --filter @nasti-toolchain/plugin-vue-lynx-example run build && node scripts/check-native-bundle.mjs",
     "test:dev": "pnpm run build && node scripts/smoke-dev.mjs",
-    "test:integration": "pnpm run test:example && pnpm run test:native && pnpm run test:dev",
+    "test:native-dev": "pnpm run build && node scripts/smoke-native-dev.mjs",
+    "test:integration": "pnpm run test:example && pnpm run test:native && pnpm run test:dev && pnpm run test:native-dev",
     "check:package": "publint && attw --pack .",
     "check": "pnpm run typecheck && pnpm run test && pnpm run build && pnpm run check:package",
     "prepack": "pnpm run build"

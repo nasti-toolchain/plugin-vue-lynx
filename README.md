@@ -124,12 +124,13 @@ pluginVueLynx({
 
 This creates independent `lynx-background` and `lynx-main-thread` Rolldown
 graphs, applies the Vue Lynx worklet transforms, serializes CSS, and uses TASM
-to emit `dist/lynx/main.lynx.bundle`.
+to emit `dist/lynx/main.lynx.bundle`. During `nasti dev`, a serve-only driver
+rebuilds that bundle on change and publishes the QR-ready URL through Nasti's
+environment services.
 
-The backend is opt-in and production-only. It currently supports one native
-entry with unscoped CSS. Development/HMR, web output, scoped CSS and CSS
-preprocessors, async/lazy chunks, IFR, and asset routing remain on the Rspeedy
-backend until later stack layers land.
+The backend is opt-in. It currently supports one native entry with unscoped
+CSS. Web output, scoped CSS and CSS preprocessors, async/lazy chunks, IFR, and
+asset routing remain on the Rspeedy backend until later stack layers land.
 Nasti [#36](https://github.com/zixiao-labs/Nasti/issues/36) Environment API
 gaps are closed in 2.4.1+; this plugin is migrating onto those APIs.
 

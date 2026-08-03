@@ -11,6 +11,7 @@ import type { Config as RspeedyConfig } from '@lynx-js/rspeedy'
 import {
   NASTI_BACKGROUND_ENVIRONMENT,
   NASTI_MAIN_THREAD_ENVIRONMENT,
+  NATIVE_SERVE_DRIVER,
   PLUGIN_NAME,
   RSPEEDY_DRIVER,
 } from './constants.js'
@@ -165,6 +166,16 @@ function extendNativeNastiConfig(
   const environments = config.environments ?? {}
   const intermediateRoot = path.join(target.outDir, '.nasti', entry.name)
   const vueRuntime = resolveVueLynxRuntime(config.root)
+  const existingServe = environments[target.name]
+  if (
+    existingServe?.driver &&
+    existingServe.driver !== NATIVE_SERVE_DRIVER
+  ) {
+    throw new Error(
+      `[${PLUGIN_NAME}] environment "${target.name}" already uses driver ` +
+        `"${existingServe.driver}"; expected "${NATIVE_SERVE_DRIVER}".`,
+    )
+  }
 
   return {
     ...config,
@@ -184,6 +195,14 @@ function extendNativeNastiConfig(
       ...environments,
       client: {
         ...environments.client,
+        buildEnabled: false,
+      },
+      // Serve-only driver environment that rebuilds/encodes the native bundle
+      // during `nasti dev` and publishes the QR-ready URL through Nasti.
+      [target.name]: {
+        ...existingServe,
+        consumer: 'client',
+        driver: NATIVE_SERVE_DRIVER,
         buildEnabled: false,
       },
       [NASTI_BACKGROUND_ENVIRONMENT]: createNativeEnvironment(

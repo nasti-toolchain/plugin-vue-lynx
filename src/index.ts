@@ -8,6 +8,7 @@ import {
   PLUGIN_NAME,
   PLUGIN_VERSION,
   RSPEEDY_DRIVER,
+  NATIVE_SERVE_DRIVER,
 } from './constants.js'
 import {
   extendNastiConfig,
@@ -30,6 +31,7 @@ import type {
 export {
   PLUGIN_VERSION,
   RSPEEDY_DRIVER,
+  NATIVE_SERVE_DRIVER,
   VUE_LYNX_PLUGIN_API_KEY,
 }
 export type {

@@ -150,6 +150,11 @@ describe('Vue Lynx target configuration', () => {
 
     expect(config.framework).toBe('vue')
     expect(config.environments?.client?.buildEnabled).toBe(false)
+    expect(config.environments?.lynx).toMatchObject({
+      consumer: 'client',
+      driver: '@nasti-toolchain/plugin-vue-lynx:native-serve',
+      buildEnabled: false,
+    })
     expect(config.environments?.['lynx-background']).toMatchObject({
       consumer: 'client',
       entry: './src/index.ts',

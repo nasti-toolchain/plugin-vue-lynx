@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Disable the placeholder `client` environment with `buildEnabled: false`
+  instead of a no-op driver, avoiding a Nasti 2.4.2 transformMiddleware crash
+  when every real target uses an external driver.
 - Require Nasti `^2.4.1` so the native backend can use Environment CSS
   metadata, high-level `build.target`, and app-level entry helpers from the
   #36 Environment API completion.

@@ -34,9 +34,7 @@ describe('Vue Lynx target configuration', () => {
     })
     const config = extendNastiConfig({ root }, targets)
 
-    expect(config.environments?.client?.driver).toBe(
-      '@nasti-toolchain/plugin-vue-lynx:client-bridge',
-    )
+    expect(config.environments?.client?.buildEnabled).toBe(false)
     expect(config.environments?.lynx).toMatchObject({
       consumer: 'client',
       driver: 'rspeedy',

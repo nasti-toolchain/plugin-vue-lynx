@@ -9,7 +9,6 @@ import type {
 import type { Config as RspeedyConfig } from '@lynx-js/rspeedy'
 
 import {
-  CLIENT_BRIDGE_DRIVER,
   NASTI_BACKGROUND_ENVIRONMENT,
   NASTI_MAIN_THREAD_ENVIRONMENT,
   PLUGIN_NAME,
@@ -115,9 +114,12 @@ export function extendNastiConfig(
 
   const targetNames = new Set(targets.map((target) => target.name))
   if (!Object.hasOwn(existingEnvironments, 'client') && !targetNames.has('client')) {
+    // Nasti still requires a client environment slot; disable it instead of
+    // installing a no-op driver. Nasti 2.4.2 always mounts client
+    // transformMiddleware and crashes when that context is missing.
     environments.client = {
       consumer: 'client',
-      driver: CLIENT_BRIDGE_DRIVER,
+      buildEnabled: false,
     }
   }
 

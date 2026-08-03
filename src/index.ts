@@ -8,6 +8,7 @@ import {
   PLUGIN_NAME,
   PLUGIN_VERSION,
   RSPEEDY_DRIVER,
+  NATIVE_SERVE_DRIVER,
 } from './constants.js'
 import {
   extendNastiConfig,
@@ -30,6 +31,7 @@ import type {
 export {
   PLUGIN_VERSION,
   RSPEEDY_DRIVER,
+  NATIVE_SERVE_DRIVER,
   VUE_LYNX_PLUGIN_API_KEY,
 }
 export type {
@@ -51,7 +53,8 @@ export type {
 } from './types.js'
 
 /**
- * Connect Vue Lynx and Rspeedy to Nasti's Environment Driver API.
+ * Connect Vue Lynx to Nasti. Defaults to the native Nasti/Rolldown backend;
+ * pass `backend: 'rspeedy'` for the Rspack-backed environment driver.
  */
 export function pluginVueLynx(
   options: VueLynxPluginOptions = {},
@@ -61,11 +64,12 @@ export function pluginVueLynx(
     targets.map((target) => [target.name, target]),
   )
   const apiController = createPluginApiController(options.bridge)
+  const backend = options.backend ?? 'nasti'
 
-  if (options.backend === 'nasti') {
+  if (backend === 'nasti') {
     if (targets.length !== 1) {
       throw new Error(
-        `[${PLUGIN_NAME}] the experimental Nasti backend currently supports ` +
+        `[${PLUGIN_NAME}] the Nasti backend currently supports ` +
           'one native Lynx target and does not support the web target.',
       )
     }

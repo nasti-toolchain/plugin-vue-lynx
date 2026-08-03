@@ -34,9 +34,11 @@ describe('Vue Lynx target configuration', () => {
     })
     const config = extendNastiConfig({ root }, targets)
 
-    expect(config.environments?.client?.driver).toBe(
-      '@nasti-toolchain/plugin-vue-lynx:client-bridge',
-    )
+    expect(config.environments?.client).toMatchObject({
+      consumer: 'client',
+      buildEnabled: false,
+    })
+    expect(config.environments?.client?.driver).toBeUndefined()
     expect(config.environments?.lynx).toMatchObject({
       consumer: 'client',
       driver: 'rspeedy',
@@ -152,16 +154,22 @@ describe('Vue Lynx target configuration', () => {
 
     expect(config.framework).toBe('vue')
     expect(config.environments?.client?.buildEnabled).toBe(false)
+    expect(config.environments?.lynx).toMatchObject({
+      consumer: 'client',
+      driver: '@nasti-toolchain/plugin-vue-lynx:native-serve',
+      buildEnabled: false,
+    })
     expect(config.environments?.['lynx-background']).toMatchObject({
       consumer: 'client',
       entry: './src/index.ts',
       build: {
         outDir: 'dist/lynx/.nasti/main/background',
         target: 'es2019',
+        css: {
+          inject: false,
+          emit: false,
+        },
         rolldownOptions: {
-          transform: {
-            target: 'es2019',
-          },
           output: {
             format: 'iife',
             entryFileNames: 'background.js',
@@ -169,10 +177,19 @@ describe('Vue Lynx target configuration', () => {
         },
       },
     })
+    expect(
+      config.environments?.['lynx-background']?.build?.rolldownOptions
+        ?.transform?.target,
+    ).toBeUndefined()
     expect(config.environments?.['lynx-main-thread']).toMatchObject({
       consumer: 'client',
       entry: './src/index.ts',
       build: {
+        target: 'es2019',
+        css: {
+          inject: false,
+          emit: false,
+        },
         rolldownOptions: {
           output: {
             entryFileNames: 'main-thread.js',
@@ -193,6 +210,12 @@ describe('Vue Lynx target configuration', () => {
   })
 
   test('rejects web and external drivers on the native backend', () => {
+    expect(() =>
+      pluginVueLynx({
+        web: true,
+      }),
+    ).toThrow('does not support the web target')
+
     expect(() =>
       pluginVueLynx({
         backend: 'nasti',

@@ -3,8 +3,6 @@ import { createServer as createTcpServer } from 'node:net'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { createServer as createNastiServer } from '@nasti-toolchain/nasti'
-
 const repositoryRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '..',
@@ -12,15 +10,16 @@ const repositoryRoot = path.resolve(
 const exampleRoot = path.join(repositoryRoot, 'examples/basic')
 const port = await findAvailablePort()
 
-// Example defaults to the native backend; force Rspeedy for this smoke path.
-process.env['VUE_LYNX_RSPEEDY_BACKEND'] = '1'
+const { createServer: createNastiServer } = await import(
+  '@nasti-toolchain/nasti'
+)
 
 let server
 
 try {
   server = await createNastiServer({
     root: exampleRoot,
-    logLevel: 'silent',
+    logLevel: 'warn',
     server: {
       host: '127.0.0.1',
       port,
@@ -28,26 +27,21 @@ try {
   })
   await server.listen(port)
 
-  for (const environment of ['lynx', 'web']) {
-    const service = server.environmentServices[environment]
-    assert.ok(service, `missing ${environment} development service`)
-    const urls = [...(service.localUrls ?? []), ...(service.networkUrls ?? [])]
-    assert.ok(urls.length > 0, `missing ${environment} development URL`)
+  const service = server.environmentServices.lynx
+  assert.ok(service, 'missing lynx native development service')
+  const urls = [...(service.localUrls ?? []), ...(service.networkUrls ?? [])]
+  assert.ok(urls.length > 0, 'missing lynx native development URL')
 
-    const response = await fetchWhenReady(urls[0])
-    assert.equal(
-      response.status,
-      200,
-      `${environment} bundle returned HTTP ${response.status}`,
-    )
-    assert.ok(
-      Number(response.headers.get('content-length') ?? 0) > 0 ||
-        (await response.arrayBuffer()).byteLength > 0,
-      `${environment} bundle was empty`,
-    )
-  }
+  const response = await fetchWhenReady(urls[0])
+  assert.equal(
+    response.status,
+    200,
+    `native bundle returned HTTP ${response.status}`,
+  )
+  const bytes = await response.arrayBuffer()
+  assert.ok(bytes.byteLength > 0, 'native bundle was empty')
 
-  process.stdout.write('Vue Lynx development smoke test passed.\n')
+  process.stdout.write('Vue Lynx native development smoke test passed.\n')
 } finally {
   await server?.close()
 }
@@ -70,7 +64,7 @@ async function findAvailablePort() {
 
 async function fetchWhenReady(url) {
   let lastError
-  for (let attempt = 0; attempt < 30; attempt += 1) {
+  for (let attempt = 0; attempt < 60; attempt += 1) {
     try {
       const response = await fetch(url)
       if (response.ok) return response
@@ -78,9 +72,9 @@ async function fetchWhenReady(url) {
     } catch (error) {
       lastError = error
     }
-    await new Promise((resolve) => setTimeout(resolve, 100))
+    await new Promise((resolve) => setTimeout(resolve, 200))
   }
-  throw new Error(`Development bundle did not become ready: ${url}`, {
+  throw new Error(`Native development bundle did not become ready: ${url}`, {
     cause: lastError,
   })
 }

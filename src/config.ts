@@ -9,9 +9,9 @@ import type {
 import type { Config as RspeedyConfig } from '@lynx-js/rspeedy'
 
 import {
-  CLIENT_BRIDGE_DRIVER,
   NASTI_BACKGROUND_ENVIRONMENT,
   NASTI_MAIN_THREAD_ENVIRONMENT,
+  NATIVE_SERVE_DRIVER,
   PLUGIN_NAME,
   RSPEEDY_DRIVER,
 } from './constants.js'
@@ -115,9 +115,12 @@ export function extendNastiConfig(
 
   const targetNames = new Set(targets.map((target) => target.name))
   if (!Object.hasOwn(existingEnvironments, 'client') && !targetNames.has('client')) {
+    // Nasti still requires a client environment slot; disable it instead of
+    // installing a no-op driver. Nasti 2.4.2 always mounts client
+    // transformMiddleware and crashes when that context is missing.
     environments.client = {
       consumer: 'client',
-      driver: CLIENT_BRIDGE_DRIVER,
+      buildEnabled: false,
     }
   }
 
@@ -153,7 +156,7 @@ function extendNativeNastiConfig(
 ): NastiConfig {
   if (targets.length !== 1 || targets[0]?.kind !== 'lynx') {
     throw new Error(
-      `[${PLUGIN_NAME}] the experimental Nasti backend currently supports ` +
+      `[${PLUGIN_NAME}] the Nasti backend currently supports ` +
         'one native Lynx target and does not support the web target.',
     )
   }
@@ -163,6 +166,16 @@ function extendNativeNastiConfig(
   const environments = config.environments ?? {}
   const intermediateRoot = path.join(target.outDir, '.nasti', entry.name)
   const vueRuntime = resolveVueLynxRuntime(config.root)
+  const existingServe = environments[target.name]
+  if (
+    existingServe?.driver &&
+    existingServe.driver !== NATIVE_SERVE_DRIVER
+  ) {
+    throw new Error(
+      `[${PLUGIN_NAME}] environment "${target.name}" already uses driver ` +
+        `"${existingServe.driver}"; expected "${NATIVE_SERVE_DRIVER}".`,
+    )
+  }
 
   return {
     ...config,
@@ -182,6 +195,14 @@ function extendNativeNastiConfig(
       ...environments,
       client: {
         ...environments.client,
+        buildEnabled: false,
+      },
+      // Serve-only driver environment that rebuilds/encodes the native bundle
+      // during `nasti dev` and publishes the QR-ready URL through Nasti.
+      [target.name]: {
+        ...existingServe,
+        consumer: 'client',
+        driver: NATIVE_SERVE_DRIVER,
         buildEnabled: false,
       },
       [NASTI_BACKGROUND_ENVIRONMENT]: createNativeEnvironment(
@@ -237,13 +258,18 @@ function createNativeEnvironment(
     build: {
       ...existing?.build,
       outDir,
+      // Lynx main-thread / background need the ES2019 baseline; Nasti 2.4.1+
+      // applies `build.target` to OXC and Rolldown without a low-level workaround.
       target: 'es2019',
+      css: {
+        ...existing?.build?.css,
+        // Keep the CSS module graph for TASM encoding, but skip browser
+        // injection and hashed .css emission.
+        inject: false,
+        emit: false,
+      },
       rolldownOptions: {
         ...existing?.build?.rolldownOptions,
-        transform: {
-          ...existing?.build?.rolldownOptions?.transform,
-          target: 'es2019',
-        },
         output: {
           ...existingOutput,
           format: 'iife',
@@ -267,7 +293,7 @@ function resolveVueLynxRuntime(root: string | undefined): string {
     )
   } catch (error) {
     throw new Error(
-      `[${PLUGIN_NAME}] the experimental Nasti backend requires "vue-lynx" ` +
+      `[${PLUGIN_NAME}] the Nasti backend requires "vue-lynx" ` +
         `to be resolvable from "${absoluteRoot}".`,
       { cause: error },
     )
@@ -288,7 +314,7 @@ export function resolveNativeEntry(entry: RspeedyEntry): NativeEntry {
       return { name: path.parse(entry[0]).name, import: entry[0] }
     }
     throw new Error(
-      `[${PLUGIN_NAME}] the experimental Nasti backend currently requires ` +
+      `[${PLUGIN_NAME}] the Nasti backend currently requires ` +
         'exactly one entry import.',
     )
   }
@@ -296,7 +322,7 @@ export function resolveNativeEntry(entry: RspeedyEntry): NativeEntry {
   const entries = Object.entries(entry)
   if (entries.length !== 1 || !entries[0]) {
     throw new Error(
-      `[${PLUGIN_NAME}] the experimental Nasti backend currently supports ` +
+      `[${PLUGIN_NAME}] the Nasti backend currently supports ` +
         'exactly one named entry.',
     )
   }

@@ -1,12 +1,13 @@
 {
   "name": "@nasti-toolchain/plugin-vue-lynx",
   "version": "0.1.0",
-  "description": "Build Vue Lynx applications with Nasti or the Rspeedy environment driver",
+  "description": "Build Vue Lynx applications with Nasti's native Rolldown backend or the optional Rspeedy driver",
   "keywords": [
     "nasti",
     "lynx",
     "vue",
     "vue-lynx",
+    "rolldown",
     "rspeedy"
   ],
   "homepage": "https://github.com/nasti-toolchain/plugin-vue-lynx#readme",
@@ -47,10 +48,12 @@
     "dev": "tsdown --watch --config-loader native",
     "typecheck": "tsc --noEmit",
     "test": "lightning run --root .",
-    "test:example": "pnpm run build && pnpm --filter @nasti-toolchain/plugin-vue-lynx-example run typecheck && pnpm --filter @nasti-toolchain/plugin-vue-lynx-example run build",
-    "test:native": "pnpm run build && VUE_LYNX_NATIVE_BACKEND=1 pnpm --filter @nasti-toolchain/plugin-vue-lynx-example run build && node scripts/check-native-bundle.mjs",
+    "test:example": "pnpm run build && pnpm --filter @nasti-toolchain/plugin-vue-lynx-example run typecheck && pnpm --filter @nasti-toolchain/plugin-vue-lynx-example run build && node scripts/check-native-bundle.mjs",
+    "test:rspeedy": "pnpm run build && VUE_LYNX_RSPEEDY_BACKEND=1 pnpm --filter @nasti-toolchain/plugin-vue-lynx-example run build",
+    "test:native": "pnpm run test:example",
     "test:dev": "pnpm run build && node scripts/smoke-dev.mjs",
-    "test:integration": "pnpm run test:example && pnpm run test:native && pnpm run test:dev",
+    "test:native-dev": "pnpm run build && node scripts/smoke-native-dev.mjs",
+    "test:integration": "pnpm run test:example && pnpm run test:rspeedy && pnpm run test:dev && pnpm run test:native-dev",
     "check:package": "publint && attw --pack .",
     "check": "pnpm run typecheck && pnpm run test && pnpm run build && pnpm run check:package",
     "prepack": "pnpm run build"
@@ -60,7 +63,7 @@
     "@lynx-js/react": ">=0.116.5 <0.117",
     "@lynx-js/rspeedy": ">=0.13.5 <0.15",
     "@lynx-js/tasm": ">=0.0.26 <0.1",
-    "@nasti-toolchain/nasti": "^2.4.0",
+    "@nasti-toolchain/nasti": "^2.4.1",
     "@rsbuild/plugin-vue": ">=1.2.6 <2",
     "@rspack/core": ">=1.7 <2",
     "vue-lynx": ">=0.5.1 <1"
@@ -95,7 +98,7 @@
     "@lynx-js/react": "0.116.5",
     "@lynx-js/rspeedy": "0.14.5",
     "@lynx-js/tasm": "0.0.26",
-    "@nasti-toolchain/nasti": "2.4.0",
+    "@nasti-toolchain/nasti": "2.4.2",
     "@rsbuild/plugin-vue": "1.2.9",
     "@rspack/core": "1.7.12",
     "@types/node": "^24.13.3",

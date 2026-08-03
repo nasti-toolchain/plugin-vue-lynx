@@ -1,47 +1,50 @@
 # @nasti-toolchain/plugin-vue-lynx
 
-Build [Vue Lynx](https://vue.lynxjs.org/) applications through Nasti. Rspeedy
-remains the default backend; an experimental production backend now builds the
-native graphs directly with Nasti/Rolldown.
+Build [Vue Lynx](https://vue.lynxjs.org/) applications through Nasti. The
+default backend builds native Lynx graphs with Nasti/Rolldown and encodes a
+`.lynx.bundle`. Pass `backend: 'rspeedy'` for the optional Rspack-backed driver
+when you need web output or other Rspeedy-only features.
 
 Version 0.1 provides:
 
-- a first-class `lynx` Nasti environment backed by Rspeedy;
-- an optional parallel `web` environment;
+- a default native `lynx` pipeline with background and main-thread Rolldown
+  graphs;
+- development rebuilds of the encoded `.lynx.bundle` with QR-ready URLs;
+- an optional Rspeedy-backed `lynx` / `web` environment driver;
 - production build results normalized to Nasti outputs, entries, manifest, and
   stats;
-- development bundle URLs, web preview URLs, and QR-code-ready metadata;
 - watch, HMR, and idempotent close lifecycle integration;
 - a typed API exposed through Nasti's `useExposed`;
 - TypeScript, vue-tsc, and Volar setup through Vue Lynx.
 
 ## Install
 
-The current Vue Lynx release uses the Rsbuild 1 generation. Install the tested
-tooling range explicitly:
+Native backend (default — no Rspack / Rspeedy required):
 
 ```sh
 pnpm add -D \
-  @nasti-toolchain/nasti@^2.4.0 \
+  @nasti-toolchain/nasti@^2.4.1 \
   @nasti-toolchain/plugin-vue-lynx@^0.1.0 \
-  @lynx-js/rspeedy@^0.14.5 \
-  @rsbuild/plugin-vue@^1.2.6 \
-  @rspack/core@^1.7.0 \
-  vue-lynx@^0.5.1
-```
-
-The experimental native backend additionally requires:
-
-```sh
-pnpm add -D \
+  vue-lynx@^0.5.1 \
   @lynx-js/css-serializer@^0.1.5 \
   @lynx-js/react@^0.116.5 \
   @lynx-js/tasm@^0.0.26
 ```
 
+Optional Rspeedy backend (web output and Rspeedy-only features). The current
+Vue Lynx release uses the Rsbuild 1 generation:
+
+```sh
+pnpm add -D \
+  @lynx-js/rspeedy@^0.14.5 \
+  @rsbuild/plugin-vue@^1.2.6 \
+  @rspack/core@^1.7.0
+```
+
 `vue-lynx@0.5.1` currently allows
 `@lynx-js/css-extract-webpack-plugin@0.7.1`, although that release requires a
-newer template plugin. pnpm projects should pin the known-compatible release:
+newer template plugin. pnpm projects that install the Rspeedy peers should pin
+the known-compatible release:
 
 ```yaml
 # pnpm-workspace.yaml
@@ -49,7 +52,7 @@ overrides:
   '@lynx-js/css-extract-webpack-plugin': 0.7.0
 ```
 
-Missing or unsupported optional peers fail only when a Vue Lynx environment is
+Missing or unsupported optional peers fail only when the matching backend is
 used, with an actionable installation error.
 
 ## Configure Nasti
@@ -67,9 +70,6 @@ export default defineConfig({
         main: './src/index.ts',
       },
       outDir: 'dist/lynx',
-      web: {
-        outDir: 'dist/web',
-      },
       vue: {
         optionsApi: false,
       },
@@ -83,13 +83,30 @@ pnpm nasti build
 pnpm nasti dev
 ```
 
-Nasti's `root`, `mode`, entry, output directory, public path, source maps,
-minification, server host/port/base/proxy, HMR, and live reload are mapped to
-Rspeedy. Use `rspeedy` for shared advanced configuration and `lynx.rspeedy` or
-`web.rspeedy` for target-specific overrides:
+This creates independent `lynx-background` and `lynx-main-thread` Rolldown
+graphs, applies the Vue Lynx worklet transforms, serializes CSS, and uses TASM
+to emit `dist/lynx/main.lynx.bundle`. During `nasti dev`, a serve-only driver
+rebuilds that bundle on change and publishes the QR-ready URL through Nasti's
+environment services.
+
+The native backend currently supports one native entry with unscoped CSS. Web
+output, scoped CSS and CSS preprocessors, async/lazy chunks, IFR, and asset
+routing remain available through `backend: 'rspeedy'`.
+
+See the complete runnable project in [`examples/basic`](./examples/basic).
+
+## Optional Rspeedy backend
 
 ```ts
 pluginVueLynx({
+  backend: 'rspeedy',
+  entry: {
+    main: './src/index.ts',
+  },
+  outDir: 'dist/lynx',
+  web: {
+    outDir: 'dist/web',
+  },
   rspeedy: ({ command, environment }) => ({
     performance: {
       printFileSize: command === 'build',
@@ -100,38 +117,13 @@ pluginVueLynx({
       },
     },
   }),
-  web: {
-    publicPath: 'https://cdn.example.com/app/',
-  },
 })
 ```
 
-See the complete runnable project in [`examples/basic`](./examples/basic).
-
-## Experimental native Nasti backend
-
-Nasti 2.4's environment build metadata and app-level finalizer make the first
-Rspack-free production milestone possible:
-
-```ts
-pluginVueLynx({
-  backend: 'nasti',
-  entry: {
-    main: './src/index.ts',
-  },
-})
-```
-
-This creates independent `lynx-background` and `lynx-main-thread` Rolldown
-graphs, applies the Vue Lynx worklet transforms, serializes CSS, and uses TASM
-to emit `dist/lynx/main.lynx.bundle`.
-
-The backend is opt-in and production-only. It currently supports one native
-entry with unscoped CSS. Development/HMR, web output, scoped CSS and CSS
-preprocessors, async/lazy chunks, IFR, asset routing, and source/debug metadata
-remain on the Rspeedy backend.
-The remaining Nasti platform work is tracked in
-[`zixiao-labs/Nasti#36`](https://github.com/zixiao-labs/Nasti/issues/36).
+Nasti's `root`, `mode`, entry, output directory, public path, source maps,
+minification, server host/port/base/proxy, HMR, and live reload are mapped to
+Rspeedy. Use `rspeedy` for shared advanced configuration and `lynx.rspeedy` or
+`web.rspeedy` for target-specific overrides.
 
 ## TypeScript and Volar
 
@@ -185,11 +177,11 @@ change and close events mirror the environment-driver lifecycle.
 | Component | v0.1 support |
 | --- | --- |
 | Node.js | `>=22.14.0` |
-| Nasti | `^2.4.0` |
+| Nasti | `^2.4.1` |
 | Vue Lynx | `>=0.5.1 <1` (tested with `0.5.1`) |
-| Rspeedy | `>=0.13.5 <0.15` (tested with `0.14.5`) |
-| Rsbuild plugin Vue | `>=1.2.6 <2` |
-| Rspack | `>=1.7 <2` |
+| Rspeedy (optional) | `>=0.13.5 <0.15` (tested with `0.14.5`) |
+| Rsbuild plugin Vue (optional) | `>=1.2.6 <2` |
+| Rspack (optional) | `>=1.7 <2` |
 
 Rspeedy `0.15+` uses Rsbuild 2, while Vue Lynx `0.5.x` still configures the
 Rsbuild 1 SWC pipeline. The driver rejects that combination before compilation
@@ -208,8 +200,9 @@ pnpm test:integration
 ```
 
 `pnpm check` runs strict type checking, the Lightning suite, tsdown, publint,
-and Are the Types Wrong. Integration tests perform real Lynx/web production
-builds and a real development-server smoke test.
+and Are the Types Wrong. Integration tests perform real Lynx production builds,
+an optional Rspeedy/web build, and development-server smoke tests for both
+backends.
 
 Release setup is documented in [`docs/releasing.md`](./docs/releasing.md).
 
